@@ -1,16 +1,18 @@
 # Totogi Trino TMF API Integration
 
-A comprehensive solution for querying TMF (TM Forum) APIs using SQL through Trino, consisting of a custom Trino connector and a web-based query interface.
+A comprehensive solution for bidirectional integration between TMF (TM Forum) APIs and SQL databases through Trino, consisting of a custom Trino connector and a web-based query interface.
 
 ## Project Overview
 
-This project enables telecom operators and service providers to query their TMF API-based systems using standard SQL, making data access more accessible to analysts and developers familiar with SQL but not necessarily with REST APIs.
+This project enables telecom operators and service providers to:
+1. Query TMF API-based systems using standard SQL, making data access more accessible to analysts and developers familiar with SQL but not necessarily with REST APIs
+2. Expose legacy SQL databases through TMF API-compliant endpoints, enabling modern applications to interact with legacy systems using standardized APIs
 
 The solution consists of two main components:
 
 1. **Trino TMF Connector**: A Java-based Trino connector that translates SQL queries into TMF API calls  
    Repository: https://github.com/rogerHuntGauntlet/trino-tmf-connector.git
-2. **TMF Query Frontend**: A Next.js web application that provides a user-friendly interface for writing SQL queries and visualizing results  
+2. **TMF Query Frontend**: A Next.js web application that provides a user-friendly interface for bidirectional conversion between SQL and TMF APIs  
    Repository: https://github.com/rogerHuntGauntlet/tmf-query-frontend.git
 
 ## Repository Structure
@@ -45,12 +47,15 @@ The connector enables SQL queries against TMF APIs by:
 
 A web-based interface that allows users to:
 - Write and execute SQL queries against TMF APIs
+- Send TMF API requests that get converted to SQL queries for legacy systems
 - View query results in a tabular format
 - Save and reuse previous queries
 - Export results to various formats (CSV, JSON, Excel)
 
 **Key Features:**
 - Interactive SQL editor with syntax highlighting
+- TMF API request builder with endpoint and method selection
+- Bidirectional conversion between SQL and TMF API formats
 - Results visualization with sorting and filtering
 - Query history management
 - Export capabilities
@@ -71,7 +76,7 @@ A web-based interface that allows users to:
 - Node.js 14 or higher
 - npm 7 or higher
 - Trino server (version 352 or higher)
-- Access to TMF APIs
+- Access to TMF APIs or legacy SQL databases
 
 ### Installation
 
@@ -131,11 +136,12 @@ TRINO_PORT=8080
 TRINO_USER=admin
 TRINO_PASSWORD=
 TRINO_CATALOG=tmf
+LEGACY_DB_CONNECTION_STRING=your-legacy-db-connection-string
 ```
 
 ## Usage Examples
 
-### Example SQL Queries
+### SQL to TMF API Examples
 
 Query customer information:
 ```sql
@@ -159,6 +165,38 @@ JOIN tmf.service.services s ON c.id = s.customer_id
 WHERE c.status = 'active';
 ```
 
+### TMF API to SQL Examples
+
+GET request to retrieve customer data:
+```json
+{
+  "endpoint": "/customerManagement/v4/customer",
+  "method": "GET",
+  "queryParams": {
+    "status": "active"
+  }
+}
+```
+
+POST request to create a new customer:
+```json
+{
+  "endpoint": "/customerManagement/v4/customer",
+  "method": "POST",
+  "body": {
+    "name": "John Doe",
+    "contactMedium": [
+      {
+        "type": "email",
+        "characteristic": {
+          "emailAddress": "john.doe@example.com"
+        }
+      }
+    ]
+  }
+}
+```
+
 ## Development
 
 ### Building the Connector
@@ -175,14 +213,33 @@ cd tmf-query-frontend
 npm run dev
 ```
 
+## Bidirectional Integration Architecture
+
+The project now supports bidirectional integration between TMF APIs and SQL databases:
+
+1. **SQL to TMF (Original Direction)**:
+   - Users write SQL queries in the frontend
+   - Queries are parsed and converted to TMF API requests
+   - Results from TMF APIs are formatted as SQL result sets
+
+2. **TMF to SQL (New Direction)**:
+   - Users send TMF API requests through the frontend
+   - Requests are converted to SQL queries for legacy databases
+   - Results from SQL databases are formatted as TMF API responses
+
+This bidirectional approach enables:
+- Modern applications to access legacy data through standardized TMF APIs
+- Data analysts to query modern TMF APIs using familiar SQL syntax
+- Seamless integration between new and legacy systems
+
 ## Research and Implementation Approach
 
 The implementation approach for this project involved:
 
-1. **Schema Mapping**: Creating a mapping between SQL database structures and TMF API endpoints/fields
-2. **Query Parsing**: Parsing SQL queries into structured components (SELECT, FROM, WHERE, JOIN)
-3. **API Request Construction**: Translating parsed SQL into API requests
-4. **Response Normalization**: Converting API responses back into SQL-compatible results
+1. **Schema Mapping**: Creating bidirectional mappings between SQL database structures and TMF API endpoints/fields
+2. **Query Parsing**: Parsing both SQL queries and TMF API requests into structured components
+3. **Request Construction**: Translating between formats in both directions
+4. **Response Normalization**: Converting responses to match the expected format of the requesting system
 
 For more details on the implementation approach, please refer to the documentation in each repository.
 
